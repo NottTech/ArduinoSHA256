@@ -1,0 +1,66 @@
+#include <sha256.h>
+char string[25];
+int i=0;
+int string_len;
+int inByte;
+int last_inByte;
+
+#define DEBUG 1
+char msg = '  ';
+
+void setup() {
+  Serial.begin(9600);  
+  Serial.print("SHA256 BEGIN \n"); 
+}
+void loop() {
+  
+    inByte = Serial.read();
+string_len=0;
+  if (inByte == '!') read_serial();  // If Start of line ("!") is found, call read_serial() function
+}
+
+void read_serial()  // FUNCTION FOR READING THE SERIAL MESSAGE
+{
+  if (DEBUG == 1) {
+     Serial.println ("SOL FOUND and reading");  // THE SOL (Start of Line) found notice.
+   Serial.print("READ : !\n");  //Saying that it has read "!" on the serial port
+  } 
+   while (inByte!= '*') // As long as EOL not found, keep reading
+   if (Serial.available() > 0) // if new data is available
+        { inByte = Serial.read(); // Read new byte
+          if (DEBUG == 1) {
+           Serial.print("READ : "); // Display the new byte
+          }
+           string[string_len] = inByte; // Save the data in a character array
+           Serial.println(string[string_len]); // Print the characters that was recieved
+           string_len++;}
+    else if (Serial.available() == 0)
+          {Serial.println("EOL not available, data string invalid"); // If EOL not in the string
+          Serial.println("$N"); //FAIL SIGNATURE
+           break;
+           }
+
+ if (inByte == '*')
+  {
+      if (DEBUG == 1) {
+       Serial.println ("eol FOUND, and full string was");  // Echoes Success Message
+      }
+      uint8_t* hash;
+      Sha256.init();
+       for (i=0;i<(string_len-1);i++) Sha256.print(string[i]);
+       printHash(Sha256.result());
+       
+       Serial.print ("\n");
+   }
+  
+   }
+
+
+void printHash(uint8_t* hash) {
+  int i;
+  for (i=0; i<32; i++) {
+    Serial.print("0123456789abcdef"[hash[i]>>4]);
+    Serial.print("0123456789abcdef"[hash[i]&0xf]);
+  }
+  Serial.println();
+}
